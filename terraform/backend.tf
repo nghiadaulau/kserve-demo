@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket       = "kai-eks-demo-terraform-state"
+    bucket       = "eks-demo-terraform-state"
     key          = "prod/act-workload-prod.tfstate"
     region       = "ap-southeast-1"
     use_lockfile = true

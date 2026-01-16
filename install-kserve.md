@@ -324,7 +324,6 @@ To uninstall:
 
 - **KServe Documentation**: https://kserve.github.io/website/
 - **KServe Quick Start**: https://kserve.github.io/website/docs/getting-started/quickstart-guide
-- **LLMInferenceService Guide**: https://kserve.github.io/website/docs/modelserving/llm/llm_inference_service
 - **KServe API Reference**: https://kserve.github.io/website/docs/reference/crd-api
 - **KEDA Documentation**: https://keda.sh/docs/
 

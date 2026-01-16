@@ -1,0 +1,12 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: llama3-demo
+  namespace: llm-demo
+  annotations:
+    serving.kserve.io/storageSecretName: hf-secret
+spec:
+  baseRefs:
+    - name: model-llama3-8b
+    - name: workload-single-gpu
+    - name: router-managed

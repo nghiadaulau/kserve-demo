@@ -1089,7 +1089,9 @@ install_envoy_ai_gateway() {
     log_info "Enabling Gateway API Inference Extension support for Envoy Gateway..."
     kubectl apply -f "https://raw.githubusercontent.com/envoyproxy/ai-gateway/v${VERSION_NUMBER}/examples/inference-pool/config.yaml"
     kubectl rollout restart -n envoy-gateway-system deployment/envoy-gateway
+    kubectl rollout restart -n envoy-ai-gateway-system deployment/ai-gateway-controller
     wait_for_deployment "envoy-gateway-system" "envoy-gateway" "180s"
+    wait_for_deployment "envoy-ai-gateway-system" "ai-gateway-controller" "180s"
     log_success "Envoy AI Gateway is ready!"
 }
 
@@ -1242,7 +1244,13 @@ install_kserve() {
             uninstall_kserve
         fi
     fi
-
+    # Check if Kserver LLMIVC enable and inferenceservice-config already own by Kserve
+    if [ "${LLMISVC}" = "true" ]; then
+        exist_configmap=$(kubectl -n kserve get configmap | grep inferenceservice-config)
+        if kubectl -n kserve get configmap inferenceservice-config >/dev/null 2>&1; then
+            kubectl -n kserve patch configmap inferenceservice-config --type merge -p '{"metadata":{"annotations":{"meta.helm.sh/release-name":"kserve-llmisvc-resources"}}}'
+        fi
+    fi
     # EMBED_MANIFESTS: use embedded manifests from generated script
     if [ "$EMBED_MANIFESTS" = "true" ]; then
         log_info "Installing KServe using embedded manifests ..."

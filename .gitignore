@@ -316,6 +316,6 @@ Desktop.ini
 # Local configuration
 application-local.yml
 application-local.properties
-/**/.terraform
+/**/.terraform/**
 /**/.terraform.lock.hcl
 /**/real*

@@ -16,24 +16,26 @@ module "eks" {
 
   eks_managed_node_groups = {
     general = {
-      ami_type     = "AL2023_x86_64_STANDARD"
-      desired_size = 2
-      max_size     = 2
-      min_size     = 2
+      use_custom_launch_template = false
+      ami_type                   = "AL2023_x86_64_STANDARD"
+      desired_size               = 2
+      max_size                   = 2
+      min_size                   = 2
 
       instance_types = ["t3.medium"]
       capacity_type  = "ON_DEMAND"
-      disk_size = 100
+      disk_size      = 100
     }
     gpu = {
-      ami_type     = "AL2023_x86_64_NVIDIA"
-      desired_size = 2
-      max_size     = 2
-      min_size     = 2
-    
+      use_custom_launch_template = false
+      ami_type                   = "AL2023_x86_64_NVIDIA"
+      desired_size               = 2
+      max_size                   = 2
+      min_size                   = 2
+
       instance_types = ["g4dn.xlarge"]
       capacity_type  = "ON_DEMAND"
-      disk_size = 200
+      disk_size      = 200
     }
   }
 

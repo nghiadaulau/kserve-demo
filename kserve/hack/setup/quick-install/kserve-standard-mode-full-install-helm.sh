@@ -1030,7 +1030,28 @@ uninstall_envoy_ai_gateway() {
     kubectl delete namespace redis-system --wait=true --timeout=60s --force --grace-period=0 2>/dev/null || true
     log_success "Envoy AI Gateway uninstalled"
 }
+install_gateway_api_extension_crd() {
+    if kubectl get crd inferencepools.inference.networking.x-k8s.io &>/dev/null; then
+        if [ "$REINSTALL" = false ]; then
+            log_info "Gateway Inference Extension CRDs are already installed. Use --reinstall to reinstall."
+            return 0
+        else
+            log_info "Reinstalling Gateway Inference Extension CRDs..."
+            uninstall
+        fi
+    fi
 
+    log_info "Installing Gateway Inference Extension CRDs ${GIE_VERSION}..."
+    kubectl apply -f "https://github.com/kubernetes-sigs/gateway-api-inference-extension/releases/download/${GIE_VERSION}/manifests.yaml"
+
+    log_success "Successfully installed Gateway Inference Extension CRDs ${GIE_VERSION}"
+
+    wait_for_crds "60s" \
+        "inferencepools.inference.networking.x-k8s.io" \
+        "inferencemodels.inference.networking.x-k8s.io"
+
+    log_success "Gateway Inference Extension CRDs are ready!"
+}
 install_envoy_ai_gateway() {
     if helm list -n envoy-ai-gateway-system 2>/dev/null | grep -q "aieg"; then
         if [ "$REINSTALL" = false ]; then
@@ -1056,7 +1077,9 @@ install_envoy_ai_gateway() {
 
     wait_for_deployment "envoy-ai-gateway-system" "ai-gateway-controller" "180s"
     log_success "Successfully installed Envoy AI Gateway ${ENVOY_AI_GATEWAY_VERSION} via Helm"
-
+    log_info "Install Gateway Inference Extension CRDs"
+    install_gateway_api_extension_crd
+    log_success "Successfully installed Gateway Inference Extension CRDs ${GIE_VERSION} via Manifest"
     log_info "Configuring Envoy Gateway for AI Gateway integration..."
     VERSION_NUMBER="${ENVOY_AI_GATEWAY_VERSION#v}"
     kubectl apply -f "https://raw.githubusercontent.com/envoyproxy/ai-gateway/v${VERSION_NUMBER}/manifests/envoy-gateway-config/redis.yaml"
@@ -1066,7 +1089,9 @@ install_envoy_ai_gateway() {
     log_info "Enabling Gateway API Inference Extension support for Envoy Gateway..."
     kubectl apply -f "https://raw.githubusercontent.com/envoyproxy/ai-gateway/v${VERSION_NUMBER}/examples/inference-pool/config.yaml"
     kubectl rollout restart -n envoy-gateway-system deployment/envoy-gateway
+    kubectl rollout restart -n envoy-ai-gateway-system deployment/ai-gateway-controller
     wait_for_deployment "envoy-gateway-system" "envoy-gateway" "180s"
+    wait_for_deployment "envoy-ai-gateway-system" "ai-gateway-controller" "180s"
     log_success "Envoy AI Gateway is ready!"
 }
 
@@ -1219,7 +1244,13 @@ install_kserve() {
             uninstall_kserve
         fi
     fi
-
+    # Check if Kserver LLMIVC enable and inferenceservice-config already own by Kserve
+    if [ "${LLMISVC}" = "true" ]; then
+        exist_configmap=$(kubectl -n kserve get configmap | grep inferenceservice-config)
+        if kubectl -n kserve get configmap inferenceservice-config >/dev/null 2>&1; then
+            kubectl -n kserve patch configmap inferenceservice-config --type merge -p '{"metadata":{"annotations":{"meta.helm.sh/release-name":"kserve-llmisvc-resources"}}}'
+        fi
+    fi
     # EMBED_MANIFESTS: use embedded manifests from generated script
     if [ "$EMBED_MANIFESTS" = "true" ]; then
         log_info "Installing KServe using embedded manifests ..."

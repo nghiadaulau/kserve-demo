@@ -2,6 +2,10 @@
 
 This repository contains a complete guide and infrastructure setup for deploying KServe on Amazon EKS with GPU support.
 
+Step-by-step video tutorial:
+- Youtube: https://youtu.be/aIOLrC7CMI0
+- GG Drive: https://drive.google.com/drive/folders/1k26A-AczT7Adhikx88kfmVhdiegu1wgY?usp=sharing
+
 ## Overview
 
 This demo provides step-by-step instructions to:
